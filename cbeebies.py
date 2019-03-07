@@ -25,19 +25,20 @@ ws1.title = "Passed"
 ws2 = wb.create_sheet(title="Failed")
 ws3 = wb.create_sheet(title="Warning")
 
-header_list = [['Result','Host','Compliance Check','Overview','Details','Solution','References']]
+header_list = [['Result','Host','Compliance Check','Overview','Details','Solution','Audit File','References']]
 ws1.append(header_list[0])
 ws2.append(header_list[0])
 ws3.append(header_list[0])
 
 for ReportHost in root.findall("./Report/ReportHost"): # Loops through ReportHosts
-    passed_host=passed_name=passed_description=passed_actual=passed_info=passed_result=passed_solution=passed_reference = ""
     z = []
     passed_host = (ReportHost.attrib['name'])
     
     previousResults = ([])
 
     for i in ReportHost: # Loops through reportItems
+        passed_name=passed_description=passed_actual=passed_info=passed_result=passed_solution=passed_reference=passed_audit = ""
+
         for x in i: # Loops through Tags in reportItems
             if x.tag == "{http://www.nessus.org/cm}compliance-result": 
                 passed_result = x.text
@@ -54,23 +55,31 @@ for ReportHost in root.findall("./Report/ReportHost"): # Loops through ReportHos
             if x.tag == "{http://www.nessus.org/cm}compliance-solution": 
                 passed_solution = x.text
                 pass
+            if x.tag == "{http://www.nessus.org/cm}compliance-audit-file": 
+                passed_audit = x.text
+                pass
             if x.tag == "{http://www.nessus.org/cm}compliance-reference": 
                 passed_reference = x.text
                 pass
+            if x.tag == "{http://www.nessus.org/cm}compliance-error":
+                if x.text == "No configs to audit":
+                    passed_info = "This setting did not appear to be configured."
+                    passed_actual = x.text
+                pass
 
         if passed_result == 'PASSED':
-            if previousResults != ([passed_result,passed_host,passed_name,passed_info,passed_actual,passed_solution,passed_reference]):
-                ws1.append([passed_result,passed_host,passed_name,passed_info,passed_actual,passed_solution,passed_reference])
-            previousResults = [passed_result,passed_host,passed_name,passed_info,passed_actual,passed_solution,passed_reference]
+            if previousResults != ([passed_result,passed_host,passed_name,passed_info,passed_actual,passed_solution,passed_audit,passed_reference]):
+                ws1.append([passed_result,passed_host,passed_name,passed_info,passed_actual,passed_solution,passed_audit,passed_reference])
+            previousResults = [passed_result,passed_host,passed_name,passed_info,passed_actual,passed_solution,passed_audit,passed_reference]
         
         if passed_result == 'FAILED':
-            if previousResults != ([passed_result,passed_host,passed_name,passed_info,passed_actual,passed_solution,passed_reference]):
-                ws2.append([passed_result,passed_host,passed_name,passed_info,passed_actual,passed_solution,passed_reference])
-            previousResults = [passed_result,passed_host,passed_name,passed_info,passed_actual,passed_solution,passed_reference]  
+            if previousResults != ([passed_result,passed_host,passed_name,passed_info,passed_actual,passed_solution,passed_audit,passed_reference]):
+                ws2.append([passed_result,passed_host,passed_name,passed_info,passed_actual,passed_solution,passed_audit,passed_reference])
+            previousResults = [passed_result,passed_host,passed_name,passed_info,passed_actual,passed_solution,passed_audit,passed_reference]  
 
         if passed_result == 'WARNING':
-            if previousResults != ([passed_result,passed_host,passed_name,passed_info,passed_actual,passed_solution,passed_reference]):
-                ws3.append([passed_result,passed_host,passed_name,passed_info,passed_actual,passed_solution,passed_reference])
-            previousResults = [passed_result,passed_host,passed_name,passed_info,passed_actual,passed_solution,passed_reference]              
+            if previousResults != ([passed_result,passed_host,passed_name,passed_info,passed_actual,passed_solution,passed_audit,passed_reference]):
+                ws3.append([passed_result,passed_host,passed_name,passed_info,passed_actual,passed_solution,passed_audit,passed_reference])
+            previousResults = [passed_result,passed_host,passed_name,passed_info,passed_actual,passed_solution,passed_audit,passed_reference]              
             
 wb.save(filename = dest_filename)
